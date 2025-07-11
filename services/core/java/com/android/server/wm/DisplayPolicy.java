@@ -468,21 +468,21 @@ public class DisplayPolicy {
                     @Override
                     public void onSwipeFromTop() {
                         synchronized (mLock) {
-                            final WindowState bar = mStatusBar != null
-                                    ? mStatusBar
-                                    : findAltBarMatchingPosition(ALT_BAR_TOP);
-                            requestTransientBars(bar, true /* isGestureOnSystemBar */);
+//                            final WindowState bar = mStatusBar != null
+//                                    ? mStatusBar
+//                                    : findAltBarMatchingPosition(ALT_BAR_TOP);
+//                            requestTransientBars(bar, true /* isGestureOnSystemBar */);
                         }
                     }
 
                     @Override
                     public void onSwipeFromBottom() {
                         synchronized (mLock) {
-                            final WindowState bar = mNavigationBar != null
-                                        && mNavigationBarPosition == NAV_BAR_BOTTOM
-                                    ? mNavigationBar
-                                    : findAltBarMatchingPosition(ALT_BAR_BOTTOM);
-                            requestTransientBars(bar, true /* isGestureOnSystemBar */);
+//                            final WindowState bar = mNavigationBar != null
+//                                        && mNavigationBarPosition == NAV_BAR_BOTTOM
+//                                    ? mNavigationBar
+//                                    : findAltBarMatchingPosition(ALT_BAR_BOTTOM);
+//                            requestTransientBars(bar, true /* isGestureOnSystemBar */);
                         }
                     }
 
@@ -490,10 +490,10 @@ public class DisplayPolicy {
                     public void onSwipeFromRight() {
                         final Region excludedRegion = Region.obtain();
                         synchronized (mLock) {
-                            mDisplayContent.calculateSystemGestureExclusion(
-                                    excludedRegion, null /* outUnrestricted */);
-                            requestTransientBarsForSideSwipe(excludedRegion, NAV_BAR_RIGHT,
-                                    ALT_BAR_RIGHT);
+//                            mDisplayContent.calculateSystemGestureExclusion(
+//                                    excludedRegion, null /* outUnrestricted */);
+//                            requestTransientBarsForSideSwipe(excludedRegion, NAV_BAR_RIGHT,
+//                                    ALT_BAR_RIGHT);
                         }
                         excludedRegion.recycle();
                     }
@@ -502,10 +502,10 @@ public class DisplayPolicy {
                     public void onSwipeFromLeft() {
                         final Region excludedRegion = Region.obtain();
                         synchronized (mLock) {
-                            mDisplayContent.calculateSystemGestureExclusion(
-                                    excludedRegion, null /* outUnrestricted */);
-                            requestTransientBarsForSideSwipe(excludedRegion, NAV_BAR_LEFT,
-                                    ALT_BAR_LEFT);
+//                            mDisplayContent.calculateSystemGestureExclusion(
+//                                    excludedRegion, null /* outUnrestricted */);
+//                            requestTransientBarsForSideSwipe(excludedRegion, NAV_BAR_LEFT,
+//                                    ALT_BAR_LEFT);
                         }
                         excludedRegion.recycle();
                     }

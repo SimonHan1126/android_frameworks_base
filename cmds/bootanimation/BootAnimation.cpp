@@ -234,10 +234,10 @@ void BootAnimation::onFirstRef() {
     if (err == NO_ERROR) {
         // Load the animation content -- this can be slow (eg 200ms)
         // called before waitForSurfaceFlinger() in main() to avoid wait
-        ALOGD("%sAnimationPreloadTiming start time: %" PRId64 "ms",
+        ALOGD("HSH %sAnimationPreloadTiming start time: %" PRId64 "ms",
                 mShuttingDown ? "Shutdown" : "Boot", elapsedRealtime());
         preloadAnimation();
-        ALOGD("%sAnimationPreloadStopTiming start time: %" PRId64 "ms",
+        ALOGD("HSH %sAnimationPreloadStopTiming start time: %" PRId64 "ms",
                 mShuttingDown ? "Shutdown" : "Boot", elapsedRealtime());
     }
 }
@@ -692,18 +692,23 @@ void BootAnimation::resizeSurface(int newWidth, int newHeight) {
 }
 
 bool BootAnimation::preloadAnimation() {
+    ALOGD("HSH %sAnimation preloadAnimation 1111 ", mShuttingDown ? "Shutdown" : "Boot");
     findBootAnimationFile();
+    ALOGD("HSH %sAnimation preloadAnimation 22222  %s ", mShuttingDown ? "Shutdown" : "Boot", mZipFileName.c_str());
     if (!mZipFileName.isEmpty()) {
+        ALOGD("HSH %sAnimation preloadAnimation 33333 %s ", mShuttingDown ? "Shutdown" : "Boot", mZipFileName.c_str());
         mAnimation = loadAnimation(mZipFileName);
         return (mAnimation != nullptr);
     }
-
+    ALOGD("HSH %sAnimation preloadAnimation 44444 %s ", mShuttingDown ? "Shutdown" : "Boot", mZipFileName.c_str());
     return false;
 }
 
 bool BootAnimation::findBootAnimationFileInternal(const std::vector<std::string> &files) {
     for (const std::string& f : files) {
+        ALOGD("HSH %sAnimation findBootAnimationFileInternal 1111 %s", mShuttingDown ? "Shutdown" : "Boot", f.c_str());
         if (access(f.c_str(), R_OK) == 0) {
+            ALOGD("HSH %sAnimation findBootAnimationFileInternal 22222 %s", mShuttingDown ? "Shutdown" : "Boot", f.c_str());
             mZipFileName = f.c_str();
             return true;
         }
@@ -758,12 +763,15 @@ void BootAnimation::findBootAnimationFile() {
         PRODUCT_USERSPACE_REBOOT_ANIMATION_FILE, OEM_USERSPACE_REBOOT_ANIMATION_FILE,
         SYSTEM_USERSPACE_REBOOT_ANIMATION_FILE,
     };
-
+    ALOGD("HSH %sAnimation findBootAnimationFile AAAAAA", mShuttingDown ? "Shutdown" : "Boot");
     if (android::base::GetBoolProperty("sys.init.userspace_reboot.in_progress", false)) {
+        ALOGD("HSH %sAnimation findBootAnimationFile BBBBB", mShuttingDown ? "Shutdown" : "Boot");
         findBootAnimationFileInternal(userspaceRebootFiles);
     } else if (mShuttingDown) {
+        ALOGD("HSH %sAnimation findBootAnimationFile CCCCC", mShuttingDown ? "Shutdown" : "Boot");
         findBootAnimationFileInternal(shutdownFiles);
     } else {
+        ALOGD("HSH %sAnimation findBootAnimationFile DDDDD", mShuttingDown ? "Shutdown" : "Boot");
         findBootAnimationFileInternal(bootFiles);
     }
 }
@@ -1172,10 +1180,11 @@ void BootAnimation::drawProgress(int percent, const Font& font, const int xPos, 
 
 bool BootAnimation::parseAnimationDesc(Animation& animation)  {
     String8 desString;
-
+    ALOGD("HSH %sAnimation parseAnimationDesc aaaaa", mShuttingDown ? "Shutdown" : "Boot");
     if (!readFile(animation.zip, "desc.txt", desString)) {
         return false;
     }
+    ALOGD("HSH %sAnimation parseAnimationDesc bbbbbb", mShuttingDown ? "Shutdown" : "Boot");
     char const* s = desString.string();
     std::string dynamicColoringPartName = "";
     bool postDynamicColoring = false;
@@ -1220,6 +1229,7 @@ bool BootAnimation::parseAnimationDesc(Animation& animation)  {
             } else {
               animation.progressEnabled = false;
             }
+            ALOGD("HSH %sAnimation parseAnimationDesc ccccccc", mShuttingDown ? "Shutdown" : "Boot");
         } else if (sscanf(l, "dynamic_colors %" STRTO(ANIM_PATH_MAX) "s #%6s #%6s #%6s #%6s %d %d",
             dynamicColoringPartNameBuffer,
             start_color_0, start_color_1, start_color_2, start_color_3,
@@ -1232,6 +1242,7 @@ bool BootAnimation::parseAnimationDesc(Animation& animation)  {
             animation.colorTransitionStart = colorTransitionStart;
             animation.colorTransitionEnd = colorTransitionEnd;
             dynamicColoringPartName = std::string(dynamicColoringPartNameBuffer);
+            ALOGD("HSH %sAnimation parseAnimationDesc dddddd", mShuttingDown ? "Shutdown" : "Boot");
         } else if (sscanf(l, "%c %d %d %" STRTO(ANIM_PATH_MAX) "s%n",
                           &pathType, &count, &pause, path, &nextReadPos) >= 4) {
             if (pathType == 'f') {
@@ -1269,6 +1280,7 @@ bool BootAnimation::parseAnimationDesc(Animation& animation)  {
             }
             parsePosition(clockPos1, clockPos2, &part.clockPosX, &part.clockPosY);
             animation.parts.add(part);
+            ALOGD("HSH %sAnimation parseAnimationDesc eeeeeee", mShuttingDown ? "Shutdown" : "Boot");
         }
         else if (strcmp(l, "$SYSTEM") == 0) {
             // SLOGD("> SYSTEM");
@@ -1281,6 +1293,7 @@ bool BootAnimation::parseAnimationDesc(Animation& animation)  {
             part.animation = loadAnimation(String8(SYSTEM_BOOTANIMATION_FILE));
             if (part.animation != nullptr)
                 animation.parts.add(part);
+            ALOGD("HSH %sAnimation parseAnimationDesc fffffff", mShuttingDown ? "Shutdown" : "Boot");
         }
         s = ++endl;
     }
@@ -1466,8 +1479,9 @@ bool BootAnimation::movie() {
     if (mAnimation->dynamicColoringEnabled) {
         initDynamicColors();
     }
-
+    ALOGD("HSH %sAnimation movie before playAnimation 111111", mShuttingDown ? "Shutdown" : "Boot");
     playAnimation(*mAnimation);
+    ALOGD("HSH %sAnimation movie before playAnimation 2222222", mShuttingDown ? "Shutdown" : "Boot");
 
     if (mTimeCheckThread != nullptr) {
         mTimeCheckThread->requestExit();

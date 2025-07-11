@@ -1623,7 +1623,8 @@
 
     <!-- Timeout (in milliseconds) after which we start the animation "Android
          is starting" -->
-    <integer name="config_progressTimeoutFallbackHome">2000</integer>
+<!--    <integer name="config_progressTimeoutFallbackHome">2000</integer>-->
+    <integer name="config_progressTimeoutFallbackHome">0</integer>
 
     <!-- Array of output values for LCD backlight corresponding to the lux values
          in the config_autoBrightnessLevels array.  This array should have size one greater

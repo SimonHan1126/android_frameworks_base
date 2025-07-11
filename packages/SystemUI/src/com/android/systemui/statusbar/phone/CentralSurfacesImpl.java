@@ -945,6 +945,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
         createAndAddWindows(result);
 
+        mStatusBarWindowController.setBarVisibility(View.GONE);
+
         if (mWallpaperSupported) {
             // Make sure we always have the most current wallpaper info.
             IntentFilter wallpaperChangedFilter = new IntentFilter(Intent.ACTION_WALLPAPER_CHANGED);
@@ -1234,7 +1236,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mStatusBarTouchableRegionManager.setup(this, mNotificationShadeWindowView);
         mNotificationPanelViewController.setHeadsUpManager(mHeadsUpManager);
 
-        createNavigationBar(result);
+//        createNavigationBar(result);
 
         if (ENABLE_LOCKSCREEN_WALLPAPER && mWallpaperSupported) {
             mLockscreenWallpaper = mLockscreenWallpaperLazy.get();

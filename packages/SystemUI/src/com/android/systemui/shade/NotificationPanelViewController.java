@@ -2571,52 +2571,56 @@ public final class NotificationPanelViewController implements Dumpable {
     }
 
     public void expand(boolean animate) {
-        if (isFullyCollapsed() || isCollapsing()) {
-            mInstantExpanding = true;
-            mAnimateAfterExpanding = animate;
-            mUpdateFlingOnLayout = false;
-            abortAnimations();
-            if (mTracking) {
-                // The panel is expanded after this call.
-                onTrackingStopped(true /* expands */);
-            }
-            if (mExpanding) {
-                notifyExpandingFinished();
-            }
-            updatePanelExpansionAndVisibility();
-            // Wait for window manager to pickup the change, so we know the maximum height of the
-            // panel then.
-            this.mView.getViewTreeObserver().addOnGlobalLayoutListener(
-                    new ViewTreeObserver.OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            if (!mInstantExpanding) {
-                                mView.getViewTreeObserver().removeOnGlobalLayoutListener(
-                                        this);
-                                return;
-                            }
-                            if (mCentralSurfaces.getNotificationShadeWindowView()
-                                    .isVisibleToUser()) {
-                                mView.getViewTreeObserver().removeOnGlobalLayoutListener(
-                                        this);
-                                if (mAnimateAfterExpanding) {
-                                    notifyExpandingStarted();
-                                    mQsController.beginJankMonitoring(isFullyCollapsed());
-                                    fling(0  /* expand */);
-                                } else {
-                                    mShadeHeightLogger.logFunctionCall("expand");
-                                    setExpandedFraction(1f);
-                                }
-                                mInstantExpanding = false;
-                            }
-                        }
-                    });
-            // Make sure a layout really happens.
-            this.mView.requestLayout();
-        }
-
-        setListening(true);
+        return;
     }
+
+//    public void expand(boolean animate) {
+//        if (isFullyCollapsed() || isCollapsing()) {
+//            mInstantExpanding = true;
+//            mAnimateAfterExpanding = animate;
+//            mUpdateFlingOnLayout = false;
+//            abortAnimations();
+//            if (mTracking) {
+//                // The panel is expanded after this call.
+//                onTrackingStopped(true /* expands */);
+//            }
+//            if (mExpanding) {
+//                notifyExpandingFinished();
+//            }
+//            updatePanelExpansionAndVisibility();
+//            // Wait for window manager to pickup the change, so we know the maximum height of the
+//            // panel then.
+//            this.mView.getViewTreeObserver().addOnGlobalLayoutListener(
+//                    new ViewTreeObserver.OnGlobalLayoutListener() {
+//                        @Override
+//                        public void onGlobalLayout() {
+//                            if (!mInstantExpanding) {
+//                                mView.getViewTreeObserver().removeOnGlobalLayoutListener(
+//                                        this);
+//                                return;
+//                            }
+//                            if (mCentralSurfaces.getNotificationShadeWindowView()
+//                                    .isVisibleToUser()) {
+//                                mView.getViewTreeObserver().removeOnGlobalLayoutListener(
+//                                        this);
+//                                if (mAnimateAfterExpanding) {
+//                                    notifyExpandingStarted();
+//                                    mQsController.beginJankMonitoring(isFullyCollapsed());
+//                                    fling(0  /* expand */);
+//                                } else {
+//                                    mShadeHeightLogger.logFunctionCall("expand");
+//                                    setExpandedFraction(1f);
+//                                }
+//                                mInstantExpanding = false;
+//                            }
+//                        }
+//                    });
+//            // Make sure a layout really happens.
+//            this.mView.requestLayout();
+//        }
+//
+//        setListening(true);
+//    }
 
     @VisibleForTesting
     void setTouchSlopExceeded(boolean isTouchSlopExceeded) {

@@ -149,6 +149,11 @@ public class StatusBarWindowController {
         apply(mCurrentState);
     }
 
+    public void setBarVisibility(int visiblity) {
+        mStatusBarWindowView.setVisibility(visiblity);
+    }
+
+
     /** Adds the given view to the status bar window view. */
     public void addViewToWindow(View view, ViewGroup.LayoutParams layoutParams) {
         mStatusBarWindowView.addView(view, layoutParams);
