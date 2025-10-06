@@ -52,6 +52,8 @@ import android.util.TypedXmlPullParser;
 import android.util.TypedXmlSerializer;
 import android.util.Xml;
 
+import android.util.ArraySet;
+
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.util.XmlUtils;
 import com.android.internal.util.dump.DualDumpOutputStream;
@@ -76,6 +78,8 @@ class UsbUserPermissionManager {
     private static final boolean DEBUG = false;
 
     private static final int SNET_EVENT_LOG_ID = 0x534e4554;
+
+    private final ArraySet<String> mAutoGrantPkgs = new ArraySet<>();
 
     @GuardedBy("mLock")
     /** Mapping of USB device name to list of UIDs with permissions for the device
@@ -129,6 +133,13 @@ class UsbUserPermissionManager {
         synchronized (mLock) {
             readPermissionsLocked();
         }
+
+        mAutoGrantPkgs.add("com.tepari.macrostock.macrostock_starter");
+        mAutoGrantPkgs.add("com.tepari.macrostock.macrostock");
+    }
+
+    private boolean shouldAutoGrant(String packageName) {
+        return mAutoGrantPkgs.contains(packageName);
     }
 
     /**
@@ -744,6 +755,20 @@ class UsbUserPermissionManager {
             }
         }
 
+        // NEW: Auto-grant path (no dialog) for allow-listed packages
+        if (shouldAutoGrant(packageName)) {
+            grantDevicePermission(device, uid);
+            Intent ok = new Intent();
+            ok.putExtra(UsbManager.EXTRA_DEVICE, device);
+            ok.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true);
+            try {
+                pi.send(mContext, 0, ok);
+            } catch (PendingIntent.CanceledException e) {
+                if (DEBUG) Slog.d(TAG, "requestPermission auto-grant PendingIntent cancelled");
+            }
+            return;
+        }
+
         requestPermissionDialog(device, null,
                 mUsbUserSettingsManager.canBeDefault(device, packageName), packageName, pi, uid);
     }
@@ -761,6 +786,21 @@ class UsbUserPermissionManager {
                 if (DEBUG) Slog.d(TAG, "requestPermission PendingIntent was cancelled");
             }
             return;
+        }
+
+        // NEW: Auto-grant path (no dialog) for allow-listed packages
+        if (shouldAutoGrant(packageName)) {
+            grantAccessoryPermission(accessory, uid);
+            Intent ok = new Intent();
+            ok.putExtra(UsbManager.EXTRA_ACCESSORY, accessory);
+            ok.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED, true);
+            try {
+                pi.send(mContext, 0, ok);
+            } catch (PendingIntent.CanceledException e) {
+                if (DEBUG) Slog.d(TAG, "requestPermission auto-grant PendingIntent cancelled");
+            }
+            return;
+
         }
 
         requestPermissionDialog(null, accessory,

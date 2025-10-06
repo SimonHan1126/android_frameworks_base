@@ -284,7 +284,16 @@ public class PackageInstallerActivity extends AlertActivity {
             mAppInfo = null;
         }
 
-        startInstallConfirm();
+//        startInstallConfirm();
+        // Skip the confirm dialog and proceed automatically.
+        if (mSessionId != -1) {
+            // This path is used when we were launched with ACTION_CONFIRM_INSTALL for a session.
+            // Signal user consent to the session and finish (no UI).
+            mInstaller.setPermissionsResult(mSessionId, true);
+            finish();
+            return;
+        }
+        startInstall();
     }
 
     void setPmResult(int pmResult) {
@@ -373,7 +382,7 @@ public class PackageInstallerActivity extends AlertActivity {
         if (mAppSnippet != null) {
             // load dummy layout with OK button disabled until we override this layout in
             // startInstallConfirm
-            bindUi();
+//            bindUi();
             checkIfAllowedAndInitiateInstall();
         }
 
@@ -507,34 +516,45 @@ public class PackageInstallerActivity extends AlertActivity {
 
     private void handleUnknownSources() {
         if (mOriginatingPackage == null) {
-            Log.i(TAG, "No source found for package " + mPkgInfo.packageName);
-            showDialogInner(DLG_ANONYMOUS_SOURCE);
+            Log.w(TAG, "No source found for package " + mPkgInfo.packageName);
+//            showDialogInner(DLG_ANONYMOUS_SOURCE);
+            mAllowUnknownSources = true;
+            initiateInstall();
             return;
         }
         // Shouldn't use static constant directly, see b/65534401.
         final int appOpCode =
                 AppOpsManager.permissionToOpCode(Manifest.permission.REQUEST_INSTALL_PACKAGES);
-        final int appOpMode = mAppOpsManager.noteOpNoThrow(appOpCode, mOriginatingUid,
-                mOriginatingPackage, mCallingAttributionTag,
-                "Started package installation activity");
-        if (mLocalLOGV) Log.i(TAG, "handleUnknownSources(): appMode=" + appOpMode);
-        switch (appOpMode) {
-            case AppOpsManager.MODE_DEFAULT:
-                mAppOpsManager.setMode(appOpCode, mOriginatingUid,
-                        mOriginatingPackage, AppOpsManager.MODE_ERRORED);
-                // fall through
-            case AppOpsManager.MODE_ERRORED:
-                showDialogInner(DLG_EXTERNAL_SOURCE_BLOCKED);
-                break;
-            case AppOpsManager.MODE_ALLOWED:
-                initiateInstall();
-                break;
-            default:
-                Log.e(TAG, "Invalid app op mode " + appOpMode
-                        + " for OP_REQUEST_INSTALL_PACKAGES found for uid " + mOriginatingUid);
-                finish();
-                break;
+//        final int appOpMode = mAppOpsManager.noteOpNoThrow(appOpCode, mOriginatingUid,
+//                mOriginatingPackage, mCallingAttributionTag,
+//                "Started package installation activity");
+//        if (mLocalLOGV) Log.i(TAG, "handleUnknownSources(): appMode=" + appOpMode);
+//        switch (appOpMode) {
+//            case AppOpsManager.MODE_DEFAULT:
+//                mAppOpsManager.setMode(appOpCode, mOriginatingUid,
+//                        mOriginatingPackage, AppOpsManager.MODE_ERRORED);
+//                // fall through
+//            case AppOpsManager.MODE_ERRORED:
+//                showDialogInner(DLG_EXTERNAL_SOURCE_BLOCKED);
+//                break;
+//            case AppOpsManager.MODE_ALLOWED:
+//                initiateInstall();
+//                break;
+//            default:
+//                Log.e(TAG, "Invalid app op mode " + appOpMode
+//                        + " for OP_REQUEST_INSTALL_PACKAGES found for uid " + mOriginatingUid);
+//                finish();
+//                break;
+//        }
+        try {
+            mAppOpsManager.setMode(appOpCode, mOriginatingUid, mOriginatingPackage, AppOpsManager.MODE_ALLOWED);
+        } catch (Throwable t) {
+            Log.w(TAG, "Unable to set AppOp MODE_ALLOWED, continuing anyway", t);
         }
+
+        mAllowUnknownSources = true;
+        if (mLocalLOGV) Log.i(TAG, "Unknown-sources gate bypassed for " + mOriginatingPackage);
+        initiateInstall();
     }
 
     /**

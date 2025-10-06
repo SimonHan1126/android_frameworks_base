@@ -18,6 +18,7 @@ package com.android.systemui.usb;
 
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.hardware.usb.UsbDevice;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,55 @@ public class UsbPermissionActivity extends UsbDialogActivity {
 
     private boolean mPermissionGranted = false;
     private UsbAudioWarningDialogMessage mUsbPermissionMessageHandler;
+
+    private static final String AUTOGRANT_PKG = "com.tepari.macrostock.macrostock_starter";
+    private static final int AUTOGRANT_VID = 0x0483;
+    private static final int AUTOGRANT_PID = 0x5750;
+
+    /**
+     * Returns the calling package name if exposed by the helper, else null.
+     */
+    private String getCallingPkgSafe() {
+        try {
+            var m = mDialogHelper.getClass().getMethod("getCallingPackage");
+            Object v = m.invoke(mDialogHelper);
+            if (v instanceof String) return (String) v;
+        } catch (Throwable ignored) {
+        }
+        try {
+            var m = mDialogHelper.getClass().getMethod("getPackageName");
+            Object v = m.invoke(mDialogHelper);
+            if (v instanceof String) return (String) v;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * Returns the current UsbDevice if available, else null.
+     */
+    private UsbDevice getUsbDeviceSafe() {
+        try {
+            var m = mDialogHelper.getClass().getMethod("getDevice");
+            Object v = m.invoke(mDialogHelper);
+            return (UsbDevice) v;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * True if this permission request matches our allowlist.
+     */
+    private boolean isTePariWhitelistedRequest() {
+        if (!mDialogHelper.isUsbDevice()) return false;
+        final String pkg = getCallingPkgSafe();
+        if (!AUTOGRANT_PKG.equals(pkg)) return false;
+        final UsbDevice dev = getUsbDeviceSafe();
+        return dev != null
+                && dev.getVendorId() == AUTOGRANT_VID
+                && dev.getProductId() == AUTOGRANT_PID;
+    }
 
     @Inject
     public UsbPermissionActivity(UsbAudioWarningDialogMessage usbAudioWarningDialogMessage) {
@@ -44,6 +94,17 @@ public class UsbPermissionActivity extends UsbDialogActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (isTePariWhitelistedRequest()) {
+            mDialogHelper.grantUidAccessPermission();
+            if (mDialogHelper.canBeDefault()) {
+                mDialogHelper.setDefaultPackage();
+            }
+            mPermissionGranted = true;
+            finish();
+            return;
+        }
+
         final boolean useRecordWarning = mDialogHelper.isUsbDevice()
                 && (mDialogHelper.deviceHasAudioCapture()
                 && !mDialogHelper.packageHasAudioRecordingPermission());

@@ -1039,10 +1039,47 @@ class UsbProfileGroupSettingsManager {
                 Slog.e(TAG, "startActivity failed", e);
             }
         } else {
+//            if (matches.size() == 1) {
+//                mUsbHandlerManager.confirmUsbHandler(matches.get(0), device, accessory);
+//            } else {
+//                mUsbHandlerManager.selectUsbHandler(matches, mParentUser, intent);
+//            }
+
+//            final boolean autoLaunchSingle =
+//                    mContext.getResources().getBoolean(
+//                            com.android.internal.R.bool.config_autoUsbLaunchSingleChoice);
+
             if (matches.size() == 1) {
-                mUsbHandlerManager.confirmUsbHandler(matches.get(0), device, accessory);
-            } else {
-                mUsbHandlerManager.selectUsbHandler(matches, mParentUser, intent);
+                final ResolveInfo ri = matches.get(0);
+                final ActivityInfo ai = ri.activityInfo;
+                final UserHandle user = UserHandle.getUserHandleForUid(ai.applicationInfo.uid);
+
+                // Persist as the default handler for this exact device/accessory
+                synchronized (mLock) {
+                    if (device != null) {
+                        setDevicePackage(device, ai.packageName, user);
+                    } else if (accessory != null) {
+                        setAccessoryPackage(accessory, ai.packageName, user);
+                    }
+                }
+
+                // Grant USB permission so the separate permission dialog never appears
+                final UsbUserPermissionManager perms =
+                        mSettingsManager.mUsbService.getPermissionsForUser(
+                                UserHandle.getUserId(ai.applicationInfo.uid));
+                if (device != null) {
+                    perms.grantDevicePermission(device, ai.applicationInfo.uid);
+                } else if (accessory != null) {
+                    perms.grantAccessoryPermission(accessory, ai.applicationInfo.uid);
+                }
+
+                // Launch the target directly
+                try {
+                    intent.setComponent(new ComponentName(ai.packageName, ai.name));
+                    mContext.startActivityAsUser(intent, user);
+                } catch (ActivityNotFoundException e) {
+                    Slog.e(TAG, "startActivity failed", e);
+                }
             }
         }
     }

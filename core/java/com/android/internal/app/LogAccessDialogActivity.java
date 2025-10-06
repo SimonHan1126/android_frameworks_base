@@ -26,6 +26,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -53,6 +54,19 @@ public class LogAccessDialogActivity extends Activity implements
     private static final String TAG = LogAccessDialogActivity.class.getSimpleName();
     public static final String EXTRA_CALLBACK = "EXTRA_CALLBACK";
 
+    // ====== Added: build-time/field control for auto-approval ======
+    // Comma-separated package names that should be auto-approved (no dialog).
+    // Example: setprop persist.sys.log_access.allow_pkgs com.tepari.macrostock.macrostock_starter,com.example.other
+    private static final String PROP_ALLOW_PKGS = "persist.sys.log_access.allow_pkgs";
+    // Optional hardcoded default (keep YOUR kiosk here; you can leave it empty if you prefer property-only):
+    private static final String[] DEFAULT_ALLOWLIST = new String[]{"com.tepari.macrostock.macrostock_starter"};
+
+    private static boolean isWhitelisted(String pkg) {
+        final String prop = SystemProperties.get(PROP_ALLOW_PKGS, "");
+        if (!prop.isEmpty()) for (String p : prop.split(",")) if (pkg.equals(p.trim())) return true;
+        for (String p : DEFAULT_ALLOWLIST) if (pkg.equals(p)) return true;
+        return false;
+    }
 
     private static final int DIALOG_TIME_OUT = Build.IS_DEBUGGABLE ? 60000 : 300000;
     private static final int MSG_DISMISS_DIALOG = 0;
@@ -78,6 +92,24 @@ public class LogAccessDialogActivity extends Activity implements
             finish();
             return;
         }
+
+
+        // ====== Added: short-circuit the UI for whitelisted packages ======
+        try {
+            if (isWhitelisted(mPackageName)) {
+                // Directly approve and finish; no dialog shown.
+                if (mCallback != null) {
+                    mCallback.approveAccessForClient(mUid, mPackageName);
+                }
+                Slog.i(TAG, "Auto-approved log access for " + mPackageName);
+                finish();
+                return;
+            }
+        } catch (RemoteException e) {
+            Slog.e(TAG, "Auto-approval failed for " + mPackageName, e);
+            // If auto-approval fails for some reason, fall back to normal UI below.
+        }
+
 
         // retrieve the title string from passed intent extra
         try {

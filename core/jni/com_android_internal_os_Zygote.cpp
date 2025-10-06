@@ -658,16 +658,16 @@ static void EnableKeepCapabilities(fail_fn_t fail_fn) {
 }
 
 static void DropCapabilitiesBoundingSet(fail_fn_t fail_fn) {
-  for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {;
-    if (prctl(PR_CAPBSET_DROP, i, 0, 0, 0) == -1) {
-      if (errno == EINVAL) {
-        ALOGE("prctl(PR_CAPBSET_DROP) failed with EINVAL. Please verify "
-              "your kernel is compiled with file capabilities support");
-      } else {
-        fail_fn(CREATE_ERROR("prctl(PR_CAPBSET_DROP, %d) failed: %s", i, strerror(errno)));
-      }
-    }
-  }
+//  for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {;
+//    if (prctl(PR_CAPBSET_DROP, i, 0, 0, 0) == -1) {
+//      if (errno == EINVAL) {
+//        ALOGE("prctl(PR_CAPBSET_DROP) failed with EINVAL. Please verify "
+//              "your kernel is compiled with file capabilities support");
+//      } else {
+//        fail_fn(CREATE_ERROR("prctl(PR_CAPBSET_DROP, %d) failed: %s", i, strerror(errno)));
+//      }
+//    }
+//  }
 }
 
 static void SetInheritable(uint64_t inheritable, fail_fn_t fail_fn) {
