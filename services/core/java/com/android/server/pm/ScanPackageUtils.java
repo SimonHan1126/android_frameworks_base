@@ -278,9 +278,22 @@ final class ScanPackageUtils {
         final File appLib32InstallDir = getAppLib32InstallDir();
         String forcePrimaryCpuAbi = "";
         final File codeFile = new File(parsedPackage.getPath());
+        // Bundled system apps that ship their native libs as real files next to the
+        // apk (lib/arm64/*.so) instead of inside it need their primary ABI taken from
+        // that directory. derivePackageAbi() cannot see those files - it only scans the
+        // apk - and its RenderScript heuristic treats ANY zip entry ending in ".bc" as
+        // 32-bit-only bitcode, which R8 output trips with obfuscated
+        // META-INF/services/*.bc entries. That forces such an app to armeabi-v7a, and it
+        // then dies looking for lib/arm/ which was never installed.
+        //
+        // parsedPackage.isSystem() extends this past the prebundled dirs to the ordinary
+        // partitions (/system/app, /product/app, ...), which never carry those scan
+        // flags. It is still gated on the app's own directory actually containing
+        // lib/arm64 or lib/arm, so it is a no-op for apps whose libs live in the apk.
         if ((!isApkFile(codeFile))
             && ((scanFlags & PackageManagerService.SCAN_AS_PREBUNDLED_DIR) != 0
-                || (scanFlags & PackageManagerService.SCAN_AS_PREINSTALL) != 0)) {
+                || (scanFlags & PackageManagerService.SCAN_AS_PREINSTALL) != 0
+                || parsedPackage.isSystem())) {
             File libDir64 = new File(codeFile, "lib/arm64");
             File libDir32 = new File(codeFile, "lib/arm");
             if (null != libDir64 && libDir64.exists()) {
